@@ -38,7 +38,7 @@ class WorkingRule:
             
     def enqueue_working_rule(self):
         logging.info("Call to enqueue WorkingRule for Rule: " + self.rule.name + " in RuleSet: " + self.rule.ruleset.name + " with DataSet: " + self.dataset.name)
-        self.execagent.enqueuew_working_rule(self)
+        self.execagent.enqueue_working_rule(self)
             
     
 
