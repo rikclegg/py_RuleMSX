@@ -49,25 +49,23 @@ class DataPointSource:
     
     def set_stale(self):
         
+        logging.info("Set Stale called for DataPoint: " + self.datapoint.name)
+        
         try:
             self.datapoint
         except:
             self.init()
         
-        print("Set DataPointSource stale for DataPoint: " + self.datapoint.name)
-        logging.info("Set DataPointSource stale for DataPoint: " + self.datapoint.name)
-        
         self.is_stale = True
-        print("Checking DataPointSource associated working rule for DataPoint: " + self.datapoint.name)
-        logging.info("Checking DataPointSource associated working rule for DataPoint: " + self.datapoint.name)
-        print("Number of associated working rules: " + str(len(self.associated_working_rules)))
+
+        logging.info("Enqueuing all associated working rules for DataPoint: " + self.datapoint.name)
+
         for ar in self.associated_working_rules:
-            print("Call to enqueue WorkingRule for RuleSet: " + ar.ruleset.name + " and DataSet: " + ar.dataset.name)
-            logging.info("Call to enqueue WorkingRule for RuleSet: " + ar.ruleset.name + " and DataSet: " + ar.dataset.name)
             ar.enqueue_working_rule()
 
-        logging.info("Set DataPointSource stale for DataPoint: " + self.datapoint.name + " complete")
-    
+        logging.info("Set Stale complete for DataPoint: " + self.datapoint.name)
+
+
     def associate_working_rule(self,working_rule):
 
         logging.info("Associate WorkingRule for Rule: " + working_rule.rule.name + " of RuleSet: " + working_rule.rule.ruleset.name + " and DataSet: " + working_rule.dataset.name)
