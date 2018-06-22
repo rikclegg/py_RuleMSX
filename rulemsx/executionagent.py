@@ -37,11 +37,15 @@ class ExecutionAgent:
                 iteration_count=iteration_count+1
                 
                 with self.lock:
-                    while self.execagent.dataset_queue.qsize() >0:
+                    while self.execagent.dataset_queue.qsize() > 0:
                         ds = self.execagent.dataset_queue.get()
                         self.ingest_dataset(ds)
             
-                    
+                    while self.execagent.purge_queue.qzise() > 0:
+                        ds = self.execagent.purge_queue.get()
+                        self.purge_from_working_set(ds)
+                        
+                        
                 while len(self.openset_queue) > 0:
                           
                     logging.info("WorkingAgent for: " + self.execagent.ruleset.name + " iteration count: " + str(iteration_count))
@@ -58,14 +62,27 @@ class ExecutionAgent:
                         logging.info("Traverse OpenSet[" + str(len(self.openset)) + "] in WorkingAgent for: " + self.execagent.ruleset.name)
 
                         res = True
+                        
                         for e in wr.evaluators:
                             if not e.evaluate(wr.dataset): 
                                 res = False
                                 break
                             
+                        logging.info("Checking results of rule evaluations...")
+
                         if res:
-                            for x in wr.executors:
+                        
+                            logging.info("All RuleConditions returned true, executing ON_TRUE actions")
+
+                            for x in wr.executors_true:
                                 x.execute(wr.dataset)
+                        
+                        else:
+                            logging.info("One or more RuleConditions returned false, executing ON_FALSE actions")
+
+                            for x in wr.executors_false:
+                                x.execute(wr.dataset)
+
                         
                 
         def ingest_dataset(self,dataset):
@@ -79,16 +96,33 @@ class ExecutionAgent:
                 wr = WorkingRule(r,dataset, self)
                 self.workingset.append(wr)
                 self.enqueue_working_rule(wr)
+                
+        def purge_from_working_set(self,dataset):
+            
+            # Remove all WorkingRules belonging to the specified dataset
+            
+            removeList=[]
+            
+            for wr in self.workingset:
+                if wr.dataset==dataset:
+                    removeList.append(wr)
+                    
+            for wr in removeList:
+                self.workingset.remove(dataset)
+                self.openset.remove(dataset)
+                self.openset_queue.remove(dataset)
+            
             
     
         def enqueue_working_rule(self,wr):
 
-            # only insert if not already in the queue
-            if wr not in self.openset_queue:
-                logging.info("Enqueue WorkingRule for Rule: " + wr.rule.name + " of RuleSet: " + wr.rule.ruleset.name + " and DataSet: " + wr.dataset.name)
-                self.openset_queue.append(wr)
-            else:
-                logging.info("Not Enqueuing WorkingRule for Rule: " + wr.rule.name + " of RuleSet: " + wr.rule.ruleset.name + " and DataSet: " + wr.dataset.name + " - already in open set.")
+            with self.lock:
+                # only insert if not already in the queue
+                if wr not in self.openset_queue:
+                    logging.info("Enqueue WorkingRule for Rule: " + wr.rule.name + " of RuleSet: " + wr.rule.ruleset.name + " and DataSet: " + wr.dataset.name)
+                    self.openset_queue.append(wr)
+                else:
+                    logging.info("Not Enqueuing WorkingRule for Rule: " + wr.rule.name + " of RuleSet: " + wr.rule.ruleset.name + " and DataSet: " + wr.dataset.name + " - already in open set.")
                 
 
     def __init__(self, ruleset, dataset=None):
@@ -98,7 +132,7 @@ class ExecutionAgent:
         self.ruleset = ruleset
         
         self.dataset_queue = queue.Queue()
-        
+        self.purge_queue = queue.Queue()
 
         if not dataset == None:
             self.add_dataset(dataset)
@@ -125,6 +159,15 @@ class ExecutionAgent:
         logging.info("Adding DataSet: " + dataset.name + " to dataSetQueue in ExecutionAgent for: " + self.ruleset.name)
 
         self.dataset_queue.put(dataset)
+        
+    
+    def purge_dataset(self,dataset):
+        
+        logging.info("Purging DataSet from WorkingSet for RuleSet: " + self.ruleset.name + " and DataSet: " + dataset.name)
+        
+        self.purge_queue.put(dataset)
+
+        
         
         
 __copyright__ = """

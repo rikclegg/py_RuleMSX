@@ -79,14 +79,14 @@ class RuleMSX:
         return rs
 
     
-    def create_action(self,name, executor):
+    def create_action(self,name, executor, action_type=Action.ActionType.ON_TRUE):
         
         logging.info("Creating Action: " + name)
         
         if(name is None or name == ""):
             raise ValueError("Action name cannot be none or empty")
         
-        a = Action(name,executor)
+        a = Action(name,executor,action_type)
         self.actions[name] = a
 
         logging.info("Created Action: " + name)

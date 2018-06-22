@@ -5,16 +5,21 @@ Created on 27 Nov 2017
 '''
 
 import logging
+from enum import Enum
 
 class Action:
     
-    def __init__(self, name, executor=None):
+    class ActionType(Enum):
+        ON_TRUE = 1
+        ON_FALSE = 2
+        
+    def __init__(self, name, executor=None, action_type):
         
         logging.info("Initializing Action: " + name)
         
         self.name = name
         self.action_executor = executor
-
+        self.action_type = action_type
         logging.info("Initialized Action: " + name)
           
     def execute(self, dataset):

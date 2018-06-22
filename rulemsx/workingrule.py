@@ -14,7 +14,8 @@ class WorkingRule:
         self.rule = rule
         self.dataset = dataset
         self.execagent = execagent
-        self.executors = []
+        self.executors_true = []
+        self.executors_false = []
         self.evaluators = []
         self.dereference()
         
@@ -25,7 +26,11 @@ class WorkingRule:
 
         if not self.rule.actions == []:         
             for action in self.rule.actions:
-                self.executors.append(action.action_executor)
+                if action.action_type == action.ActionType.ON_TRUE:
+                    self.executors_true.append(action.action_executor)
+                else:
+                    self.executors_false.append(action.action_executor)
+                    
             
         if not self.rule.rule_conditions == []:         
             for condition in self.rule.rule_conditions:

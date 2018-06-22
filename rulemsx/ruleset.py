@@ -53,6 +53,10 @@ class RuleSet:
             logging.info("Add DataSet: " + dataset.name + " to ExecutionAgent for RuleSet: " + self.name)
 
             self.execution_agent.add_dataset(dataset)
+            
+    def purge_dataset(self,dataset):
+        if self.execution_agent != None:
+            self.execution_agent.purge_dataset(dataset)
         
 
 __copyright__ = """
